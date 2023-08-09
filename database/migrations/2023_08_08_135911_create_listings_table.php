@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('listings', function (Blueprint $table) {
-            $table->increments('listing_id');
+            $table->increments('id');
             $table->integer('price');
             $table->integer('sqr_meters');
             $table->enum('availability', ['Sale', 'Rent']);

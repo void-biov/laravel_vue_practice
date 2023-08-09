@@ -9,7 +9,8 @@ class ListingsController extends Controller
 {
     public function index()
     {
-        return Listing::all();
+        return Listing::find(2);
+        // return Listing::all();
         // return view('listings/index');
     }
 }
