@@ -31,7 +31,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('listings', function (Blueprint $table) {
-            $table->dropIndex('property_location'); // Foreign key
+            $table->dropForeign('property_location'); // Foreign key
+        });
+        Schema::table('listings', function (Blueprint $table) {
             $table->dropColumn('location_id');
         });
         Schema::dropIfExists('locations');
