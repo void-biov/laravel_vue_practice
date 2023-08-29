@@ -25,7 +25,7 @@ class ListingFactory extends Factory
             'price' => fake()->numberBetween(10,10000000),
             'sqr_meters' => fake()->numberBetween(20,10000),
             'availability' => fake()->randomElement(['Sale', 'Rent']),
-            'location_id' => fake()->numberBetween(1,10),
+            'location_id' => fake()->numberBetween(1,4),
         ];
     }
 

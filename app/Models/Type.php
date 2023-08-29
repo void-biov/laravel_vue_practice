@@ -10,10 +10,14 @@ class Type extends Model
 {
     use HasFactory;
     public $timestamps = false;
-
+    // protected $visible = ['name'];
     public function listings(): BelongsToMany
     {
         return $this->belongsToMany(Listing::class);
     }
+
+    // public function toArray(){
+    //     return [$this->name];
+    // }
 
 }

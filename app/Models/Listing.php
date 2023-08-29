@@ -11,6 +11,14 @@ class Listing extends Model
 {
     use HasFactory;
     public $timestamps = false;
+    protected $hidden = ['types'];
+    protected $appends = ['typeNames'];
+    // typeNames
+    public function getTypeNamesAttribute()
+    {
+        return $this->types->pluck('name');
+    }
+
     public function location()
     {
         return $this->belongsTo(Location::class);
