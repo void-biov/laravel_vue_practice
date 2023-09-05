@@ -76,6 +76,9 @@ class ListingsController extends Controller
 
             $results = $query->get();
             return $results;
+            // return view('listings.index', ['listings' => $results]);
+
+            // return $results;
             // return  var_export($results, true);
 
             // return $results;

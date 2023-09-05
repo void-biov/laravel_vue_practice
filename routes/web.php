@@ -19,4 +19,4 @@ Route::get('/', function () {
 });
 
 //listings' endpoint
-Route::get('/listings',[ListingsController::class, 'index']);
+Route::get('/listings',[ListingsController::class, 'index'])->name('listingsRoute');
