@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Laravel</title>
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+
+        <link rel="stylesheet" href="/css/locationStyles.css">
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+
+    </head>
+    <body>
+        <div id="app">
+            <!-- Header and button to add -->
+            <div class="flex-container">
+                <h1>Locations</h1>
+                <button class="button" @click="showNew = true"> + Add new location</button>
+            </div>
+
+            <div class="successAdd" v-if="success.length"> <h4>{{ success }} </h4></div>
+
+            <!-- Opens modal to add new location -->
+            <transition v-if="showNew" name="modal">
+                <div class="modal-mask">
+                  <div class="modal-wrapper">
+                    <div class="modal-container">
+
+                      <div class="modal-header">
+                        <button class="modal-x-button" @click="closeCreateModal()">x</button>
+                        <h3 slot="header">Add a new location</h3>
+                      </div>
+
+                      <div class="modal-body">
+                        <p v-if="errors.length" slot="error">
+                            <div v-for="error in errors">{{error}}</div>
+                        </p>
+                      </div>
+
+                      <div class="modal-body">
+                        <input v-model="newLocation" type="text" placeholder="name" name="name">
+                      </div>
+
+                      <div class="modal-footer">
+                          Save new location?
+                          <button class="modal-default-button" @click="createLocationAndCloseModal()">
+                            Save
+                          </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </transition>
+
+            <!-- end of new location modal -->
+
+            <!-- list of locations -->
+            <div class="table-flex">
+                <table>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th colspan="2">Actions</th>
+                    </tr>
+                    <tr v-for="location in locations" :key="location.id">
+                        <td>{{ location.id }}</td>
+                        <td>{{ location.name }}</td>
+                        <td><button class="edit-button" @click="editItem(location)">Edit</button></td>
+                        <td><button class="delete-button" @click="deleteItem(location)">Delete</button></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- Edit Modal -->
+            <transition v-if="editModal" name="modal">
+                <div class="modal-mask">
+                  <div class="modal-wrapper">
+                    <div class="modal-container">
+
+                      <div class="modal-header">
+                        <button class="modal-x-button" @click="closeEditModal()">x</button>
+                        <h3 slot="header">Edit location</h3>
+                      </div>
+
+                      <div class="modal-body">
+                        <h5>
+                            {{ editedItem.id }}.
+                            <input v-model="editedItem.name" />
+                        </h5>
+                      </div>
+
+                      <div class="modal-footer">
+                          Save changes?
+                          <button class="modal-default-button" @click="updateName()">
+                            Save
+                          </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </transition>
+            <!-- Edit Modal Ends -->
+
+            <!-- Delete Modal -->
+            <transition v-if="deleteModal" name="modal">
+                <div class="modal-mask">
+                  <div class="modal-wrapper">
+                    <div class="modal-container">
+
+                      <div class="modal-header">
+                        <button class="modal-x-button" @click="closeDeleteModal()">x</button>
+                        <h3 slot="header">Delete location</h3>
+                      </div>
+
+                      <div class="modal-body">
+                        <h4>{{ deletedItem.id }}. {{ deletedItem.name }}</h4>
+                      </div>
+
+                      <div class="modal-footer">
+                          Are you sure?
+                          <button class="modal-default-button" @click="deleteLocation()">
+                            Delete
+                          </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </transition>
+            <!-- Delete Modal Ends -->
+
+        </div>
+
+    </body>
+
+    <script>
+
+    var app = new Vue({
+        el: '#app',
+        data: {
+            locations: [],
+            showNew: false,
+            editModal: false,
+            deleteModal: false,
+            newLocation: '',
+            errors: [],
+            success: [],
+            editedName: {},
+            locationToDelete: null,
+            },
+
+        methods: {
+            async createLocationAndCloseModal() {
+                try {
+                    const response = await fetch('/geographies', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ name: this.newLocation }),
+                    });
+
+                    if (response.ok) {
+                    const data = await response.json();
+                    console.log('Data saved:', data);
+                    this.success = data.message;
+                    this.closeCreateModal();
+                    this.locations.push(data.location)
+                    } else {
+                       console.error('Error saving data:', response.statusText);
+                       const errorsResponse = await response.json()
+                       this.errors = errorsResponse.errors.name;
+                    }
+
+                } catch (error) {
+                    console.error('Error saving data2:', error);
+                }
+            },
+            closeCreateModal(){
+                this.newLocation = '';
+                this.showNew = false;
+                this.errors = [];
+            },
+            closeEditModal() {
+                this.editModal = false;
+            },
+            closeDeleteModal() {
+                this.deleteModal = false;
+            },
+            async fetchNewLocation() {
+                try {
+                    const response = await fetch('/geographies');
+
+                    if (response.ok) {
+                    this.locations = await response.json();
+                    } else {
+                    console.log('failed to get list of locations')
+                    }
+                } catch (error) {
+                    // Handle errors
+                }
+            },
+
+            editItem(location) {
+                this.editedItem = {};
+                for (let key in location) {
+                    if (location.hasOwnProperty(key)) {
+                        this.editedItem[key] = location[key];
+                    }
+                }
+                // this.editedItem = { ...location };
+                this.editModal = true;
+            },
+
+            async updateName() {
+                try {
+                    const response = await fetch(`/geographies/${this.editedItem.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                    },
+                        body: JSON.stringify(this.editedItem),
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Item updated:', data);
+
+                        this.editModal = false;
+                        this.success = data.message;
+                        this.fetchNewLocation();
+                    } else {
+                        console.error('Error updating item:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error updating item:', error);
+                }
+            },
+
+            deleteItem(location) {
+                this.deletedItem = { ...location };
+                this.locationToDelete = location;
+                this.deleteModal = true;
+            },
+
+            async deleteLocation() {
+                try {
+                    const response = await fetch(`/geographies/${this.locationToDelete.id}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log("Item deleted");
+
+                        this.deleteModal = false;
+                        this.success = data.message;
+                        this.fetchNewLocation();
+                    } else {
+                        console.error('Error deleting item1:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error deleting item2:', error);
+                }
+            }
+        },
+
+
+        async mounted() {
+            // const locale = await fetch('http://127.0.0.1:8000/geographies');
+            // this.locations = await locale.json();
+            this.fetchNewLocation();
+        }
+    })
+    </script>
+
+</html>
+
+
+

@@ -13,4 +13,12 @@ class Location extends Model
     {
         return $this->hasMany(Listing::class);
     }
+
+    protected $fillable = [
+        'name'
+    ];
+
+    public function store(){
+
+    }
 }

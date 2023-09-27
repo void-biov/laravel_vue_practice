@@ -10,24 +10,29 @@ use Illuminate\Support\Facades\DB;
 
 class ListingsController extends Controller
 {
+    public function html() {
+        return view('search');
+    }
+
     public function index(Request $request)
     {
         try {
             $validatedData = $request->validate([
-                'priceMin' => 'numeric|min:10|max:10000000',
-                'priceMax' => 'numeric|min:10|max:10000000',
-                'sqrMetersMin' => 'numeric|min:20|max:20000',
-                'sqrMetersMax' => 'numeric|min:20|max:20000'
+                'minPrice' => 'nullable|numeric|min:10|max:10000000',
+                'maxPrice' => 'nullable|numeric|min:10|max:10000000',
+                'minSqrMeters' => 'nullable|numeric|min:20|max:20000',
+                'maxSqrMeters' => 'nullable|numeric|min:20|max:20000'
             ]);
             // return response()->json(['message' => 'Data submitted successfully']);
             // return Listing::all();
 
             $locationId = $request->input('location_id');
-            $minPrice = $request->input('priceMin');
-            $maxPrice = $request->input('priceMax');
-            $minSqrMeters = $request->input('sqrMetersMin');
-            $maxSqrMeters = $request->input('sqrMetersMax');
-            $typeName = $request->input('type');
+            $minPrice = $request->input('minPrice');
+            $maxPrice = $request->input('maxPrice');
+            $minSqrMeters = $request->input('minSqrMeters');
+            $maxSqrMeters = $request->input('maxSqrMeters');
+            $typeNames = json_decode($request->input('typeName'), true);
+            // '["apartment","studio"]'
             $availability = $request->input('availability');
 
             //return Listing::with('types')->get();
@@ -44,9 +49,9 @@ class ListingsController extends Controller
             //     return $query->whereIn('types.name', $typeNames);
             // });
 
-            if ($typeName) {
-                $query->whereHas('types', function ($query) use ($typeName) {
-                    $query->where('name', '=', $typeName);
+            if (!empty($typeNames)) {
+                $query->whereHas('types', function ($query) use ($typeNames) {
+                    $query->whereIn('name', $typeNames);
                 });
             }
 
