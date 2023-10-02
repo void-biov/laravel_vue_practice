@@ -16,6 +16,10 @@ class Type extends Model
         return $this->belongsToMany(Listing::class);
     }
 
+    protected $fillable=[
+        'name'
+    ];
+
     // public function toArray(){
     //     return [$this->name];
     // }

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <title>Types crud</title>
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link href="https://fonts.bunny.net/css?family=figtree:400,600&display=swap" rel="stylesheet" />
+
+        <link rel="stylesheet" href="/css/locationStyles.css">
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.7.14/dist/vue.js"></script>
+
+    </head>
+    <body>
+        <div id="app">
+            <div class="flex-container">
+                <h1>Types</h1>
+                <button class="button" @click="addNew = true">+ Add new type</button>
+            </div>
+
+            <div class="successAdd" v-if="success.length"> <h4>{{ success }} </h4></div>
+
+            <!-- create modal -->
+            <transition v-if="addNew" name="modal">
+                <div class="modal-mask">
+                  <div class="modal-wrapper">
+                    <div class="modal-container">
+
+                      <div class="modal-header">
+                        <button class="modal-x-button" @click="closeCreateModal()">x</button>
+                        <h3 slot="header">Add a new type</h3>
+                      </div>
+
+                      <div class="modal-body">
+                        <p v-if="errors.length" slot="error">
+                            <div v-for="error in errors">{{error}}</div>
+                        </p>
+                      </div>
+
+                      <div class="modal-body">
+                        <input v-model="newType" type="text" placeholder="name" name="name">
+                      </div>
+
+                      <div class="modal-footer">
+                          Save new type?
+                          <button class="modal-default-button" @click="createTypeAndCloseModal()">
+                            Save
+                          </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </transition>
+
+            <!-- table of types -->
+            <div class="table-flex">
+                <table>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th colspan="2">Actions</th>
+                    </tr>
+                    <tr v-for="type in types" :key="type.id">
+                        <td>{{ type.id }}</td>
+                        <td>{{ type.name }}</td>
+                        <td><button class="edit-button" @click="editItem(type)">Edit</button></td>
+                        <td><button class="delete-button" @click="deleteItem(type)">Delete</button></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- edit modal -->
+            <transition v-if="editModal" name="modal">
+                <div class="modal-mask">
+                  <div class="modal-wrapper">
+                    <div class="modal-container">
+
+                      <div class="modal-header">
+                        <button class="modal-x-button" @click="closeEditModal()">x</button>
+                        <h3 slot="header">Edit type</h3>
+                      </div>
+
+                      <div class="modal-body">
+                        <h5>
+                            {{ editedItem.id }}.
+                            <input v-model="editedItem.name" />
+                        </h5>
+                      </div>
+
+                      <div class="modal-footer">
+                        Save changes?
+                          <button class="modal-default-button" @click="updateTypeAndCloseModal()">
+                            Save
+                          </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </transition>
+
+            <!-- delete modal -->
+            <transition v-if="deleteModal" name="modal">
+            <div class="modal-mask">
+                <div class="modal-wrapper">
+                <div class="modal-container">
+
+                    <div class="modal-header">
+                    <button class="modal-x-button" @click="closeDeleteModal()">x</button>
+                    <h3 slot="header">Delete type</h3>
+                    </div>
+
+                    <div class="modal-body">
+                    <h5>
+                        {{ itemToDelete.id }}. {{ itemToDelete.name }}
+                    </h5>
+                    </div>
+
+                    <div class="modal-footer">
+                    Are you sure?
+                        <button class="modal-default-button" @click="deleteTypeAndCloseModal()">
+                        Delete
+                        </button>
+                    </div>
+                </div>
+                </div>
+            </div>
+            </transition>
+
+        </div>
+    </body>
+
+    <script>
+        var app = new Vue({
+        el: '#app',
+        data: {
+            types: [],
+            success: [],
+            addNew: false,
+            newType: '',
+            errors: [],
+            editModal: false,
+            editedItem: {},
+            deleteModal: false,
+            itemToDelete: {}
+        },
+
+        methods: {
+            async fetchTypes() {
+                try {
+                    const response = await fetch('/types');
+
+                    if (response.ok) {
+                    this.types = await response.json();
+                    } else {
+                    console.log('failed to get list of locations')
+                    }
+                } catch (error) {
+                    // Handle errors
+                }
+            },
+
+            closeCreateModal() {
+                this.addNew = false;
+            },
+
+            closeEditModal() {
+                this.editModal = false;
+            },
+
+            closeDeleteModal() {
+                this.deleteModal = false;
+            },
+
+            async createTypeAndCloseModal() {
+                try {
+                    const response = await fetch('/types', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type' : 'application/json'
+                        },
+                        body: JSON.stringify({ name: this.newType})
+                    })
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Creation successfull:', data);
+
+                        this.success = data.message;
+                        this.closeCreateModal();
+                        this.types.push(data.type);
+                    } else {
+                        console.error('Error saving data:', response.statusText);
+                        const errorsResponse = await response.json();
+                        this.errors = errorsResponse.errors.name;
+                    }
+                }
+                catch (error) {
+                    console.error('Error saving data2:', error);
+                }
+            },
+
+            editItem(type) {
+                this.editedItem = { ...type };
+                this.editModal = true;
+            },
+
+            async updateTypeAndCloseModal() {
+                try {
+                    const response = await fetch(`/types/${this.editedItem.id}`,{
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify (this.editedItem)
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Edited successfully:', data);
+
+                        this.success = data.message;
+                        this.closeEditModal();
+                        this.fetchTypes();
+                    } else {
+                        console.error('Error saving data:', response.statusText);
+                        const errorsResponse = await response.json();
+                        this.errors = errorsResponse.errors.name;
+                    }
+                } catch(error) {
+                    console.error('Error saving data2:', error);
+                }
+            },
+
+            deleteItem(type) {
+                this.itemToDelete = { ...type };
+                this.deleteModal = true;
+            },
+
+            async deleteTypeAndCloseModal() {
+                try {
+                    const response = await fetch(`/types/${this.itemToDelete.id}`,{
+                        method: 'DELETE'
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        console.log('Deleted:', data);
+
+                        this.success = data.message;
+                        this.closeDeleteModal();
+                        this.fetchTypes();
+                    } else {
+                        console.error('Error saving data:', response.statusText);
+                        const errorsResponse = await response.json();
+                        this.errors = errorsResponse.errors.name;
+                    }
+                } catch(error) {
+                    console.error('Error saving data2:', error);
+                }
+            }
+
+        },
+
+        async mounted() {
+            const types = await fetch('http://127.0.0.1:8000/types');
+            this.types = await types.json();
+        }
+    })
+</script>
+
+</html>

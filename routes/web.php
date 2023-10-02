@@ -27,6 +27,10 @@ Route::post('/geographies',[GeographiesController::class, 'store'])->name('store
 Route::put('/geographies/{location}',[GeographiesController::class, 'update'])->name('updateRoute');
 Route::delete('/geographies/{id}',[GeographiesController::class, 'destroy'])->name('deleteRoute');
 Route::get('/types',[TypesController::class, 'types'])->name('typesRoute');
+Route::get('/types/index',[TypesController::class, 'index'])->name('typesIndexRoute');
+Route::post('/types',[TypesController::class, 'store'])->name('typesStoreRoute');
+Route::put('/types/{type}',[TypesController::class, 'update'])->name('typesUpdateRoute');
+Route::delete('/types/{type}',[TypesController::class, 'destroy'])->name('typesDeleteRoute');
 
 
 //listings' endpoint

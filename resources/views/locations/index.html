@@ -164,11 +164,11 @@
                     });
 
                     if (response.ok) {
-                    const data = await response.json();
-                    console.log('Data saved:', data);
-                    this.success = data.message;
-                    this.closeCreateModal();
-                    this.locations.push(data.location)
+                        const data = await response.json();
+                        console.log('Data saved:', data);
+                        this.success = data.message;
+                        this.closeCreateModal();
+                        this.locations.push(data.location)
                     } else {
                        console.error('Error saving data:', response.statusText);
                        const errorsResponse = await response.json()
